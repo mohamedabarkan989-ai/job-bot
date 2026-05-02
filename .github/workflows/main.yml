@@ -1,0 +1,44 @@
+name: Run Job Bot
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'  # Every 3 hours
+  workflow_dispatch:  # Manual trigger
+
+permissions:
+  contents: write  # Allow pushing changes back to repo
+
+jobs:
+  scrape-and-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Job Bot
+      env:
+        TG_TOKEN: ${{ secrets.TG_TOKEN }}
+        TG_CHAT: ${{ secrets.TG_CHAT_ID }}
+        MAX_PAIRS: 400
+      run: |
+        # Use GitHub Actions secrets, ignore local .env file
+        python main.py full
+
+    - name: Commit and push database updates
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add jobs.db
+        git diff --quiet && git diff --staged --quiet || git commit -m "Update job database [automated]"
+        git push

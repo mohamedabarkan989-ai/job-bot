@@ -3,6 +3,12 @@ import os
 import json
 import logging
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # Load from .env if available (local dev)
+except ImportError:
+    pass  # python-dotenv not installed, use direct env vars (GitHub Actions)
+
 log = logging.getLogger(__name__)
 
 # ═══ TELEGRAM ═══

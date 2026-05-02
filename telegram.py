@@ -13,6 +13,22 @@ log = logging.getLogger(__name__)
 MSG_COUNT = [0]
 
 
+def validate_bot() -> bool:
+    """Validate Telegram bot token and permissions."""
+    try:
+        r = requests.get(f"https://api.telegram.org/bot{TG_TOKEN}/getMe", timeout=10)
+        if r.status_code == 200 and r.json().get("ok"):
+            log.info("Bot token is valid.")
+            return True
+        else:
+            error = r.json()
+            log.error(f"Invalid bot token: {error.get('error_code', 'Unknown')} — {error.get('description', 'No description')}")
+            return False
+    except Exception as e:
+        log.error(f"Failed to validate bot: {e}")
+        return False
+
+
 def tg_send(text: str) -> bool:
     """Send message to Telegram with rate limiting."""
     for i in range(3):
@@ -32,6 +48,12 @@ def tg_send(text: str) -> bool:
                 log.warning(f"TG rate limit. Waiting {wait}s")
                 time.sleep(wait)
                 continue
+            if r.status_code == 403:
+                log.error("TG 403: Bot lacks permissions for this chat.")
+                return False
+            if r.status_code == 404:
+                log.error("TG 404: Invalid chat ID or bot token.")
+                return False
             if r.status_code == 200:
                 MSG_COUNT[0] += 1
                 time.sleep(random.uniform(0.5, 2.0))
