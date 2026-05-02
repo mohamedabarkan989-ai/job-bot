@@ -19,7 +19,7 @@ import random
 from config import KEYWORDS, CITIES, SOURCES, FILTER, MAX_PAIRS, MAX_BLOCKS_PER_SOURCE
 from models import init_db, save_job, SEEN_THIS_RUN
 from scraper import scrape_keyword_city, SOURCE_BLOCKS
-from telegram import send_to_telegram, send_stats, MSG_COUNT
+from telegram import send_to_telegram, send_stats, MSG_COUNT, validate_bot
 
 logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -35,6 +35,11 @@ def main() -> None:
     log.info(f"Sources  : {len(SOURCES)}")
     log.info(f"Filter   : {FILTER}")
     log.info(f"Max pairs: {MAX_PAIRS}")
+
+    # Validate bot before sending
+    if not validate_bot():
+        log.error("Bot validation failed. Exiting.")
+        return
 
     if mode in ("full", "scrape"):
         all_pairs = [(kw, city) for kw in KEYWORDS for city in CITIES]
