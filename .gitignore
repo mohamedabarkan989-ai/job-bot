@@ -1,5 +1,0 @@
-__pycache__/
-.pytest_cache/
-*.pyc
-job-bot/__pycache__/
-job-bot/.pytest_cache/
